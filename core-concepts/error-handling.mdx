@@ -1,17 +1,17 @@
 ---
 title: 'Error Handling'
-description: 'Learn about error handling and retry mechanisms in Schedo.dev'
+description: 'Learn about error handling and retries in Schedo.dev'
 ---
 
-Schedo.dev provides comprehensive error handling capabilities to ensure your jobs are resilient and reliable.
+Schedo.dev provides error handling and retry mechanisms for your jobs.
 
 ## Basic Error Handling
 
-When a job throws an error, Schedo.dev automatically:
+When a job throws an error, Schedo.dev:
 1. Captures the error details
-2. Logs the failure
-3. Initiates retry logic (if configured)
-4. Updates job status
+2. Updates job status
+3. Logs the failure
+4. Initiates retry logic (if configured)
 
 ```typescript
 schedo.defineJob(
@@ -21,12 +21,6 @@ schedo.defineJob(
     try {
       await riskyOperation();
     } catch (error) {
-      // Log error details
-      await ctx.log('Operation failed', {
-        error: error.message,
-        stack: error.stack
-      });
-
       // Rethrow to trigger retry mechanism
       throw error;
     }
@@ -49,160 +43,54 @@ schedo.defineJob(
     // Retry configuration
     retries: 3,                    // Number of retry attempts
     retryDelay: 60000,            // Delay between retries (ms)
-    retryBackoff: 'exponential',   // Backoff strategy
-    maxRetryDelay: 3600000        // Maximum retry delay (1 hour)
-  }
-);
-```
-
-## Retry Strategies
-
-### Fixed Delay
-```typescript
-{
-  retries: 3,
-  retryDelay: 60000  // 60 seconds between each retry
-}
-```
-
-### Exponential Backoff
-```typescript
-{
-  retries: 3,
-  retryDelay: 60000,
-  retryBackoff: 'exponential',  // 1min -> 2min -> 4min
-  maxRetryDelay: 300000        // Cap at 5 minutes
-}
-```
-
-### Custom Strategy
-```typescript
-{
-  retries: 3,
-  retryStrategy: (attempt, error) => {
-    if (error.code === 'RATE_LIMITED') {
-      return 300000;  // 5 minutes for rate limits
-    }
-    return 60000;     // 1 minute for other errors
-  }
-}
-```
-
-## Error Types
-
-Schedo.dev provides built-in error types:
-
-```typescript
-import {
-  JobTimeoutError,
-  JobValidationError,
-  RetryableError,
-  NonRetryableError
-} from '@useschedo/node';
-
-schedo.defineJob(
-  'error-types',
-  '0 * * * *',
-  async (ctx) => {
-    try {
-      await someOperation();
-    } catch (error) {
-      if (isTransientError(error)) {
-        throw new RetryableError('Temporary failure', { cause: error });
-      } else {
-        throw new NonRetryableError('Permanent failure', { cause: error });
-      }
-    }
-  }
-);
-```
-
-## Error Notifications
-
-Configure notifications for job failures:
-
-```typescript
-schedo.defineJob(
-  'critical-job',
-  '0 * * * *',
-  async (ctx) => {
-    // Job implementation
-  },
-  {
-    notifications: {
-      onFailure: {
-        email: ['alerts@company.com'],
-        slack: '#alerts',
-        webhook: 'https://api.company.com/alerts'
-      },
-      onRetry: {
-        slack: '#alerts'
-      }
-    }
   }
 );
 ```
 
 ## Error Context
 
-Access detailed error information in retry attempts:
+Access error and retry information in the job context:
 
 ```typescript
 schedo.defineJob(
   'context-example',
   '0 * * * *',
   async (ctx) => {
-    if (ctx.attempt > 1) {
-      // Access previous error
-      const lastError = ctx.lastError;
-      console.log('Previous attempt failed:', {
-        error: lastError.message,
-        attempt: ctx.attempt - 1,
-        timestamp: lastError.timestamp
+    try {
+      await operation();
+    } catch (error) {
+      // Access execution context
+      console.log('Job failed:', {
+        jobCode: ctx.jobCode,
+        executionId: ctx.executionId,
+        attempt: ctx.attempt
       });
+      throw error;
     }
-
-    // Continue with job logic
   }
 );
 ```
 
 ## Best Practices
 
-1. **Categorize Errors**
+1. **Error Handling with Retries**
    ```typescript
    async (ctx) => {
      try {
        await operation();
      } catch (error) {
-       if (error.code === 'NETWORK_ERROR') {
-         throw new RetryableError(error);
-       } else if (error.code === 'VALIDATION_ERROR') {
-         throw new NonRetryableError(error);
+       if (isTransientError(error)) {
+         throw error; // Let Schedo handle retries
+       } else {
+         // Handle non-retryable errors
+         console.error('Permanent failure:', error);
+         throw error;
        }
-       throw error;  // Unknown errors
      }
    }
    ```
 
-2. **Log Error Details**
-   ```typescript
-   async (ctx) => {
-     try {
-       await operation();
-     } catch (error) {
-       await ctx.log('Operation failed', {
-         error: error.message,
-         code: error.code,
-         metadata: error.metadata,
-         stack: error.stack
-       });
-       throw error;
-     }
-   }
-   ```
-
-3. **Handle Cleanup**
+2. **Resource Cleanup**
    ```typescript
    async (ctx) => {
      let resource;
@@ -219,13 +107,25 @@ schedo.defineJob(
    }
    ```
 
+## Job Execution Errors
+
+When a job fails, you can view detailed error information in the job execution details:
+
+![Job Execution Error](/images/jobs/job-execution-error.png)
+
+The error details include:
+- Execution status
+- Scheduled and actual pickup time
+- Duration
+- Error output and stack trace
+
 ## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Monitoring" icon="chart-line" href="/core-concepts/monitoring">
     Learn about monitoring job executions
   </Card>
-  <Card title="Advanced Retries" icon="shield" href="/advanced/retries">
-    Explore advanced retry configurations
+  <Card title="Jobs" icon="code" href="/core-concepts/jobs">
+    Learn about job definitions
   </Card>
 </CardGroup> 

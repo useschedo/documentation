@@ -1,15 +1,15 @@
 ---
 title: 'Scheduling'
-description: 'Learn about job scheduling patterns and options'
+description: 'Learn about job scheduling patterns'
 ---
 
 # Scheduling
 
-Schedo.dev provides flexible scheduling options to help you run jobs exactly when you need them.
+Schedo.dev provides flexible scheduling options for running jobs, supporting both cron expressions and interval-based scheduling.
 
 ## Cron Expressions
 
-The most common way to schedule jobs is using cron expressions:
+Jobs can be scheduled using standard cron expressions:
 
 ```typescript
 schedo.defineJob(
@@ -59,7 +59,7 @@ Cron expressions consist of five fields:
 
 ## Interval-based Scheduling
 
-For simpler intervals, you can use the interval syntax:
+For simpler intervals, you can use interval-based scheduling:
 
 ```typescript
 schedo.defineJob(
@@ -79,58 +79,9 @@ schedo.defineJob(
 );
 ```
 
-## One-time Jobs
-
-Schedule jobs to run once at a specific time:
-
-```typescript
-schedo.defineJob(
-  'migration',
-  new Date('2024-03-15T00:00:00Z'),  // Run at specific time
-  async (ctx) => {
-    // Job implementation
-  }
-);
-```
-
-## Dynamic Scheduling
-
-Change job schedules programmatically:
-
-```typescript
-// Update job schedule
-await schedo.updateJobSchedule(
-  'backup-job',
-  '0 */2 * * *'  // Every 2 hours
-);
-
-// Pause job
-await schedo.pauseJob('backup-job');
-
-// Resume job
-await schedo.resumeJob('backup-job');
-```
-
-## Timezone Support
-
-Specify timezones for your jobs:
-
-```typescript
-schedo.defineJob(
-  'daily-report',
-  '0 9 * * *',    // 9 AM
-  async (ctx) => {
-    // Job implementation
-  },
-  {
-    timezone: 'America/New_York'  // Run at 9 AM ET
-  }
-);
-```
-
 ## Schedule Validation
 
-Schedo.dev validates your schedules:
+Schedo.dev validates both cron expressions and intervals:
 
 ```typescript
 // Invalid cron expression
@@ -142,9 +93,14 @@ schedo.defineJob(
   }
 );
 
-// Valid schedule checker
-const isValid = schedo.isValidSchedule('*/15 * * * *');
-console.log(isValid);  // true
+// Invalid interval
+schedo.defineJob(
+  'invalid-interval',
+  { minutes: 0 },   // 0 is invalid interval
+  async (ctx) => {
+    // Never runs - throws error during definition
+  }
+);
 ```
 
 ## Best Practices

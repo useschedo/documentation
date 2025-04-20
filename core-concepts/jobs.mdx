@@ -1,13 +1,11 @@
 ---
 title: 'Jobs'
-description: 'Learn about job definitions and lifecycle'
+description: 'Learn about job definitions and execution'
 ---
 
-Schedo.dev jobs are the core building blocks for scheduling and executing your tasks.
+Jobs are the fundamental building blocks in Schedo.dev. A job represents a task that needs to be executed at specific times or intervals.
 
 # Jobs
-
-Jobs are the fundamental building blocks in Schedo.dev. A job represents a piece of code that needs to be executed at specific times or intervals.
 
 ## Job Structure
 
@@ -19,7 +17,7 @@ schedo.defineJob(
   '*/15 * * * *',           // Schedule
   async (ctx) => {          // Handler
     // Job implementation
-    return { status: 'done' };
+    return 'Job completed';
   }
 );
 ```
@@ -28,84 +26,61 @@ schedo.defineJob(
 
 Every job requires a unique identifier. This ID is used to:
 - Track job executions
-- Monitor job status
+- Reference the job in the system
 - Configure job-specific settings
-- Reference the job in the dashboard
 
 ```typescript
 // Good identifiers are descriptive and unique
-'daily-user-cleanup'
-'hourly-metrics-aggregation'
-'weekly-report-generation'
+'daily-cleanup'
+'hourly-metrics'
+'weekly-report'
 ```
 
 ### Job Context
 
-The job handler receives a context object (`ctx`) containing useful information and utilities:
+The job handler receives a context object (`ctx`) containing execution information:
 
 ```typescript
 async (ctx) => {
   // Execution metadata
   console.log(ctx.executionId);    // Unique execution ID
-  console.log(ctx.startedAt);      // Execution start time
-  console.log(ctx.attempt);        // Current retry attempt
-
+  console.log(ctx.jobCode);        // Job identifier
+  
   // Job metadata
-  console.log(ctx.jobId);          // Job identifier
-  console.log(ctx.schedule);       // Job schedule
-
-  // Utilities
-  await ctx.log('Processing...');  // Structured logging
-  await ctx.setMetadata({          // Update job metadata
-    status: 'processing'
-  });
+  const metadata = ctx.getMetadata();
+  console.log(metadata);
 }
 ```
 
 ### Job Return Values
 
-Jobs can return data that will be stored and accessible in the dashboard:
+Jobs can return a string that will be stored as the execution result:
 
 ```typescript
 async (ctx) => {
   const result = await processData();
-  
-  return {
-    processedItems: result.count,
-    duration: result.duration,
-    status: 'success'
-  };
+  return `Processed ${result.count} items`;
 }
 ```
 
 ## Job Lifecycle
 
-Jobs in Schedo.dev follow a specific lifecycle:
+Jobs in Schedo.dev follow a simple lifecycle:
 
 1. **Scheduled**: Job is waiting for its next execution time
 2. **Running**: Job is currently executing
 3. **Completed**: Job finished successfully
 4. **Failed**: Job encountered an error
-   - May retry depending on configuration
-   - Moves to "Failed" state after all retries exhausted
 
 ```typescript
 schedo.defineJob(
   'example-job',
   '0 * * * *',
   async (ctx) => {
-    // 1. Job is scheduled (waiting for next hour)
-    
     try {
-      // 2. Job starts running
-      await ctx.log('Starting job...');
-      
-      const result = await processData();
-      
-      // 3. Job completes successfully
-      return { status: 'success', ...result };
+      await processData();
+      return 'Job completed successfully';
     } catch (error) {
-      // 4. Job fails and may retry
       throw error;
     }
   }
@@ -114,7 +89,7 @@ schedo.defineJob(
 
 ## Job Configuration
 
-Jobs can be configured with various options:
+Jobs can be configured with basic options:
 
 ```typescript
 schedo.defineJob(
@@ -124,58 +99,39 @@ schedo.defineJob(
     // Job implementation
   },
   {
-    // Retry configuration
-    retries: 3,
-    retryDelay: 60000, // 60 seconds
-
     // Timeout configuration
     timeout: 300000,   // 5 minutes
 
-    // Concurrency configuration
-    unique: true,      // Prevent concurrent executions
-
     // Metadata
-    tags: ['production', 'cleanup'],
-    description: 'Daily cleanup job'
+    metadata: {
+      owner: 'team-name',
+      priority: 'high'
+    }
   }
 );
 ```
 
 ## Best Practices
 
-1. **Idempotency**
-   ```typescript
-   // Good: Idempotent job
-   async (ctx) => {
-     const lastRun = await getLastProcessedTimestamp();
-     const newRecords = await getRecordsSince(lastRun);
-     await processRecords(newRecords);
-   }
-   ```
-
-2. **Error Handling**
+1. **Error Handling**
    ```typescript
    async (ctx) => {
      try {
        await riskyOperation();
      } catch (error) {
-       await ctx.log('Operation failed', { error });
-       throw error; // Let Schedo handle retries
+       throw error;
      }
    }
    ```
 
-3. **Progress Tracking**
+2. **Progress Tracking**
    ```typescript
    async (ctx) => {
      const items = await getItems();
-     
-     for (const [index, item] of items.entries()) {
-       await ctx.setMetadata({
-         progress: (index / items.length) * 100
-       });
+     for (const item of items) {
        await processItem(item);
      }
+     return `Processed ${items.length} items`;
    }
    ```
 
@@ -186,6 +142,29 @@ schedo.defineJob(
     Learn about scheduling options
   </Card>
   <Card title="Error Handling" icon="shield" href="/core-concepts/error-handling">
-    Implement robust error handling
+    Implement error handling
   </Card>
-</CardGroup> 
+</CardGroup>
+
+## Dashboard Overview
+
+The dashboard provides a comprehensive view of your job statistics and current state:
+
+<img src="/images/jobs/dashboard-overview.png" />
+The dashboard shows:
+- Total Jobs: Total number of jobs defined
+- Active Jobs: Number of jobs that are active and running
+- Failed Jobs: Number of job definitions with failed executions
+
+## Job Details
+
+Each job has detailed parameters and execution statistics:
+
+<img src="/images/jobs/job-details-params.png" alt="Job Details and Parameters" />
+
+Key information includes:
+- Schedule settings
+- Job timeout
+- Creation date
+- Last and next run times
+- Execution history graph showing average execution times 
