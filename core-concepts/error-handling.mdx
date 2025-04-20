@@ -1,0 +1,231 @@
+---
+title: 'Error Handling'
+description: 'Learn about error handling and retry mechanisms in Schedo.dev'
+---
+
+Schedo.dev provides comprehensive error handling capabilities to ensure your jobs are resilient and reliable.
+
+## Basic Error Handling
+
+When a job throws an error, Schedo.dev automatically:
+1. Captures the error details
+2. Logs the failure
+3. Initiates retry logic (if configured)
+4. Updates job status
+
+```typescript
+schedo.defineJob(
+  'example-job',
+  '* * * * *',
+  async (ctx) => {
+    try {
+      await riskyOperation();
+    } catch (error) {
+      // Log error details
+      await ctx.log('Operation failed', {
+        error: error.message,
+        stack: error.stack
+      });
+
+      // Rethrow to trigger retry mechanism
+      throw error;
+    }
+  }
+);
+```
+
+## Retry Configuration
+
+Configure retry behavior for your jobs:
+
+```typescript
+schedo.defineJob(
+  'retry-example',
+  '0 * * * *',
+  async (ctx) => {
+    // Job implementation
+  },
+  {
+    // Retry configuration
+    retries: 3,                    // Number of retry attempts
+    retryDelay: 60000,            // Delay between retries (ms)
+    retryBackoff: 'exponential',   // Backoff strategy
+    maxRetryDelay: 3600000        // Maximum retry delay (1 hour)
+  }
+);
+```
+
+## Retry Strategies
+
+### Fixed Delay
+```typescript
+{
+  retries: 3,
+  retryDelay: 60000  // 60 seconds between each retry
+}
+```
+
+### Exponential Backoff
+```typescript
+{
+  retries: 3,
+  retryDelay: 60000,
+  retryBackoff: 'exponential',  // 1min -> 2min -> 4min
+  maxRetryDelay: 300000        // Cap at 5 minutes
+}
+```
+
+### Custom Strategy
+```typescript
+{
+  retries: 3,
+  retryStrategy: (attempt, error) => {
+    if (error.code === 'RATE_LIMITED') {
+      return 300000;  // 5 minutes for rate limits
+    }
+    return 60000;     // 1 minute for other errors
+  }
+}
+```
+
+## Error Types
+
+Schedo.dev provides built-in error types:
+
+```typescript
+import {
+  JobTimeoutError,
+  JobValidationError,
+  RetryableError,
+  NonRetryableError
+} from '@useschedo/node';
+
+schedo.defineJob(
+  'error-types',
+  '0 * * * *',
+  async (ctx) => {
+    try {
+      await someOperation();
+    } catch (error) {
+      if (isTransientError(error)) {
+        throw new RetryableError('Temporary failure', { cause: error });
+      } else {
+        throw new NonRetryableError('Permanent failure', { cause: error });
+      }
+    }
+  }
+);
+```
+
+## Error Notifications
+
+Configure notifications for job failures:
+
+```typescript
+schedo.defineJob(
+  'critical-job',
+  '0 * * * *',
+  async (ctx) => {
+    // Job implementation
+  },
+  {
+    notifications: {
+      onFailure: {
+        email: ['alerts@company.com'],
+        slack: '#alerts',
+        webhook: 'https://api.company.com/alerts'
+      },
+      onRetry: {
+        slack: '#alerts'
+      }
+    }
+  }
+);
+```
+
+## Error Context
+
+Access detailed error information in retry attempts:
+
+```typescript
+schedo.defineJob(
+  'context-example',
+  '0 * * * *',
+  async (ctx) => {
+    if (ctx.attempt > 1) {
+      // Access previous error
+      const lastError = ctx.lastError;
+      console.log('Previous attempt failed:', {
+        error: lastError.message,
+        attempt: ctx.attempt - 1,
+        timestamp: lastError.timestamp
+      });
+    }
+
+    // Continue with job logic
+  }
+);
+```
+
+## Best Practices
+
+1. **Categorize Errors**
+   ```typescript
+   async (ctx) => {
+     try {
+       await operation();
+     } catch (error) {
+       if (error.code === 'NETWORK_ERROR') {
+         throw new RetryableError(error);
+       } else if (error.code === 'VALIDATION_ERROR') {
+         throw new NonRetryableError(error);
+       }
+       throw error;  // Unknown errors
+     }
+   }
+   ```
+
+2. **Log Error Details**
+   ```typescript
+   async (ctx) => {
+     try {
+       await operation();
+     } catch (error) {
+       await ctx.log('Operation failed', {
+         error: error.message,
+         code: error.code,
+         metadata: error.metadata,
+         stack: error.stack
+       });
+       throw error;
+     }
+   }
+   ```
+
+3. **Handle Cleanup**
+   ```typescript
+   async (ctx) => {
+     let resource;
+     try {
+       resource = await allocateResource();
+       await useResource(resource);
+     } catch (error) {
+       throw error;
+     } finally {
+       if (resource) {
+         await releaseResource(resource);
+       }
+     }
+   }
+   ```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Monitoring" icon="chart-line" href="/core-concepts/monitoring">
+    Learn about monitoring job executions
+  </Card>
+  <Card title="Advanced Retries" icon="shield" href="/advanced/retries">
+    Explore advanced retry configurations
+  </Card>
+</CardGroup> 

@@ -1,0 +1,266 @@
+---
+title: 'Monitoring'
+description: 'Monitor and observe your jobs in real-time'
+---
+
+Schedo.dev provides comprehensive monitoring capabilities to help you track and debug your scheduled jobs.
+
+## Dashboard Overview
+
+The Schedo.dev dashboard provides real-time insights into your jobs:
+
+- Job execution status
+- Historical execution data
+- Error logs and stack traces
+- Performance metrics
+- Resource utilization
+
+## Real-time Monitoring
+
+Monitor job executions in real-time using the SDK:
+
+```typescript
+// Subscribe to job events
+schedo.on('job:started', (event) => {
+  console.log('Job started:', event.jobId);
+});
+
+schedo.on('job:completed', (event) => {
+  console.log('Job completed:', {
+    jobId: event.jobId,
+    duration: event.duration,
+    result: event.result
+  });
+});
+
+schedo.on('job:failed', (event) => {
+  console.log('Job failed:', {
+    jobId: event.jobId,
+    error: event.error,
+    attempt: event.attempt
+  });
+});
+```
+
+## Structured Logging
+
+Use the context logger for structured job logs:
+
+```typescript
+schedo.defineJob(
+  'example-job',
+  '* * * * *',
+  async (ctx) => {
+    // Basic logging
+    await ctx.log('Starting job');
+
+    // Structured logging with metadata
+    await ctx.log('Processing items', {
+      count: items.length,
+      batchId: batchId
+    });
+
+    // Log levels
+    await ctx.log.info('Informational message');
+    await ctx.log.warn('Warning message');
+    await ctx.log.error('Error message');
+
+    // Log with timestamps
+    await ctx.log('Operation completed', {
+      duration: Date.now() - startTime
+    });
+  }
+);
+```
+
+## Metrics and Analytics
+
+Track job performance metrics:
+
+```typescript
+schedo.defineJob(
+  'metrics-example',
+  '0 * * * *',
+  async (ctx) => {
+    const startTime = Date.now();
+    
+    // Record custom metrics
+    await ctx.metrics.increment('items_processed', 100);
+    await ctx.metrics.gauge('queue_size', queueSize);
+    await ctx.metrics.timing('processing_time', Date.now() - startTime);
+
+    // Add metric tags
+    await ctx.metrics.increment('api_calls', 1, {
+      endpoint: '/api/data',
+      status: 200
+    });
+  }
+);
+```
+
+## Health Checks
+
+Monitor job health status:
+
+```typescript
+// Check job health
+const health = await schedo.getJobHealth('example-job');
+console.log('Job health:', {
+  status: health.status,
+  lastSuccess: health.lastSuccess,
+  failureRate: health.failureRate,
+  avgDuration: health.avgDuration
+});
+
+// Set up health checks
+schedo.defineJob(
+  'health-check',
+  '*/5 * * * *',
+  async (ctx) => {
+    const jobs = await schedo.listJobs();
+    
+    for (const job of jobs) {
+      const health = await schedo.getJobHealth(job.id);
+      
+      if (health.status === 'unhealthy') {
+        await notifyTeam({
+          job: job.id,
+          health: health
+        });
+      }
+    }
+  }
+);
+```
+
+## Alerting
+
+Configure alerts for job events:
+
+```typescript
+schedo.defineJob(
+  'critical-job',
+  '0 * * * *',
+  async (ctx) => {
+    // Job implementation
+  },
+  {
+    alerts: {
+      // Failure alerts
+      onFailure: {
+        email: ['team@company.com'],
+        slack: '#alerts',
+        webhook: 'https://api.company.com/alerts'
+      },
+
+      // Performance alerts
+      onSlowExecution: {
+        threshold: 300000,  // 5 minutes
+        slack: '#alerts'
+      },
+
+      // Custom conditions
+      conditions: [
+        {
+          name: 'high-error-rate',
+          condition: (metrics) => metrics.failureRate > 0.1,
+          channels: ['email', 'slack']
+        }
+      ]
+    }
+  }
+);
+```
+
+## Dashboard Integration
+
+The SDK automatically sends data to your Schedo.dev dashboard:
+
+```typescript
+schedo.defineJob(
+  'dashboard-example',
+  '0 * * * *',
+  async (ctx) => {
+    // Progress updates appear in real-time
+    await ctx.setProgress(25);
+    
+    // Custom status messages
+    await ctx.setStatus('Processing batch 1/4');
+    
+    // Metadata updates
+    await ctx.setMetadata({
+      currentBatch: 1,
+      itemsProcessed: 100,
+      estimatedTimeRemaining: '10 minutes'
+    });
+    
+    // Final results appear in the job history
+    return {
+      processedItems: 400,
+      duration: '45 minutes',
+      status: 'success'
+    };
+  }
+);
+```
+
+## Best Practices
+
+1. **Structured Logging**
+   ```typescript
+   async (ctx) => {
+     await ctx.log('Processing items', {
+       count: items.length,
+       type: 'batch-process',
+       environment: process.env.NODE_ENV
+     });
+   }
+   ```
+
+2. **Performance Tracking**
+   ```typescript
+   async (ctx) => {
+     const startTime = Date.now();
+     
+     // Track operation durations
+     for (const item of items) {
+       const opStart = Date.now();
+       await processItem(item);
+       await ctx.metrics.timing('item_processing', Date.now() - opStart);
+     }
+     
+     // Overall duration
+     await ctx.metrics.timing('total_duration', Date.now() - startTime);
+   }
+   ```
+
+3. **Health Monitoring**
+   ```typescript
+   async (ctx) => {
+     // Check dependencies
+     const health = {
+       database: await checkDatabaseConnection(),
+       api: await checkApiStatus(),
+       queue: await checkQueueSize()
+     };
+     
+     // Log health status
+     await ctx.log('Health check', health);
+     
+     // Alert on issues
+     if (!health.database || !health.api) {
+       throw new Error('Critical dependency unavailable');
+     }
+   }
+   ```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Advanced Monitoring" icon="chart-line" href="/advanced/monitoring">
+    Learn about advanced monitoring features
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/advanced/webhooks">
+    Set up webhook integrations
+  </Card>
+</CardGroup> 

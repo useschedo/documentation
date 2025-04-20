@@ -1,0 +1,184 @@
+---
+title: 'Scheduling'
+description: 'Learn about job scheduling patterns and options'
+---
+
+# Scheduling
+
+Schedo.dev provides flexible scheduling options to help you run jobs exactly when you need them.
+
+## Cron Expressions
+
+The most common way to schedule jobs is using cron expressions:
+
+```typescript
+schedo.defineJob(
+  'daily-backup',
+  '0 0 * * *',    // Run at midnight every day
+  async (ctx) => {
+    // Job implementation
+  }
+);
+```
+
+### Cron Format
+
+Cron expressions consist of five fields:
+
+```
+┌───────────── minute (0 - 59)
+│ ┌───────────── hour (0 - 23)
+│ │ ┌───────────── day of month (1 - 31)
+│ │ │ ┌───────────── month (1 - 12)
+│ │ │ │ ┌───────────── day of week (0 - 6) (Sunday to Saturday)
+│ │ │ │ │
+* * * * *
+```
+
+### Common Patterns
+
+```typescript
+// Every minute
+'* * * * *'
+
+// Every 15 minutes
+'*/15 * * * *'
+
+// Every hour
+'0 * * * *'
+
+// Every day at midnight
+'0 0 * * *'
+
+// Every Monday at 9:00 AM
+'0 9 * * 1'
+
+// Every month on the 1st at midnight
+'0 0 1 * *'
+```
+
+## Interval-based Scheduling
+
+For simpler intervals, you can use the interval syntax:
+
+```typescript
+schedo.defineJob(
+  'health-check',
+  { minutes: 5 },    // Run every 5 minutes
+  async (ctx) => {
+    // Job implementation
+  }
+);
+
+schedo.defineJob(
+  'cleanup',
+  { hours: 1 },      // Run every hour
+  async (ctx) => {
+    // Job implementation
+  }
+);
+```
+
+## One-time Jobs
+
+Schedule jobs to run once at a specific time:
+
+```typescript
+schedo.defineJob(
+  'migration',
+  new Date('2024-03-15T00:00:00Z'),  // Run at specific time
+  async (ctx) => {
+    // Job implementation
+  }
+);
+```
+
+## Dynamic Scheduling
+
+Change job schedules programmatically:
+
+```typescript
+// Update job schedule
+await schedo.updateJobSchedule(
+  'backup-job',
+  '0 */2 * * *'  // Every 2 hours
+);
+
+// Pause job
+await schedo.pauseJob('backup-job');
+
+// Resume job
+await schedo.resumeJob('backup-job');
+```
+
+## Timezone Support
+
+Specify timezones for your jobs:
+
+```typescript
+schedo.defineJob(
+  'daily-report',
+  '0 9 * * *',    // 9 AM
+  async (ctx) => {
+    // Job implementation
+  },
+  {
+    timezone: 'America/New_York'  // Run at 9 AM ET
+  }
+);
+```
+
+## Schedule Validation
+
+Schedo.dev validates your schedules:
+
+```typescript
+// Invalid cron expression
+schedo.defineJob(
+  'invalid-job',
+  '0 24 * * *',    // 24 is invalid hour
+  async (ctx) => {
+    // Never runs - throws error during definition
+  }
+);
+
+// Valid schedule checker
+const isValid = schedo.isValidSchedule('*/15 * * * *');
+console.log(isValid);  // true
+```
+
+## Best Practices
+
+1. **Avoid Too Frequent Execution**
+   ```typescript
+   // Bad: Every second
+   '* * * * * *'
+   
+   // Better: Every minute
+   '* * * * *'
+   ```
+
+2. **Consider Business Hours**
+   ```typescript
+   // Run during business hours (9 AM - 5 PM on weekdays)
+   '0 9-17 * * 1-5'
+   ```
+
+3. **Stagger High-Load Jobs**
+   ```typescript
+   // Instead of all jobs at midnight
+   '0 0 * * *'     // Job A
+   '5 0 * * *'     // Job B
+   '10 0 * * *'    // Job C
+   ```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Error Handling" icon="shield" href="/core-concepts/error-handling">
+    Learn about handling job failures
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/core-concepts/monitoring">
+    Monitor your scheduled jobs
+  </Card>
+</CardGroup> 

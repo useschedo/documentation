@@ -1,0 +1,182 @@
+---
+title: 'Go Quickstart'
+description: 'Get started with Schedo.dev using Go'
+---
+
+# Go SDK Quickstart
+
+The Schedo Go SDK provides a type-safe and intuitive way to interact with the Schedo API from your Go applications.
+
+## Installation
+
+Install the SDK using Go modules:
+
+```bash
+go get -u github.com/useschedo/golang-sdk
+```
+
+## Authentication
+
+First, create a Schedo client with your API key:
+
+```go
+import (
+    "github.com/useschedo/golang-sdk"
+    "github.com/useschedo/golang-sdk/option"
+)
+
+client := schedo.NewClient(
+    option.WithAPIKey("your_api_key"), // defaults to os.LookupEnv("SCHEDO_API_KEY")
+)
+```
+
+## Defining a Job
+
+Here's how to define a new job using the SDK:
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "github.com/useschedo/golang-sdk"
+    "github.com/useschedo/golang-sdk/option"
+)
+
+func main() {
+    client := schedo.NewClient(
+        option.WithAPIKey("your_api_key"),
+    )
+
+    // Define a new job
+    job, err := client.Jobs.Define(context.TODO(), schedo.JobDefineParams{
+        Name:     schedo.F("daily-backup"),
+        Schedule: schedo.F("0 0 * * *"),  // Run at midnight every day
+        Metadata: schedo.F(map[string]interface{}{
+            "description": "Daily backup job",
+            "owner": "infrastructure-team",
+        }),
+        TimeoutSeconds: schedo.F(int64(3600)),  // 1 hour timeout
+        Blocking:       schedo.F(true),         // Job is blocking
+    })
+    if err != nil {
+        panic(err.Error())
+    }
+    fmt.Printf("Created job with ID: %d\n", job.ID)
+}
+```
+
+## Managing Jobs
+
+The SDK provides several methods to manage your jobs:
+
+```go
+// Get job details
+output, err := client.Jobs.Get(context.TODO(), jobID, schedo.JobGetParams{
+    XAPIEnvironment: schedo.F(int64(1)),
+})
+
+// List all jobs
+jobs, err := client.Jobs.List(context.TODO(), schedo.JobListParams{
+    XAPIEnvironment: schedo.F(int64(1)),
+})
+
+// Pause a job
+execution, err := client.Jobs.Pause(context.TODO(), jobID, schedo.JobPauseParams{
+    XAPIEnvironment: schedo.F(int64(1)),
+})
+
+// Resume a job
+execution, err := client.Jobs.Resume(context.TODO(), jobID, schedo.JobResumeParams{
+    XAPIEnvironment: schedo.F(int64(1)),
+})
+
+// Trigger a job immediately
+execution, err := client.Jobs.Trigger(context.TODO(), jobID, schedo.JobTriggerParams{
+    XAPIEnvironment: schedo.F(int64(1)),
+})
+
+// Delete a job
+_, err := client.Jobs.Delete(context.TODO(), jobID, schedo.JobDeleteParams{
+    XAPIEnvironment: schedo.F(int64(1)),
+})
+```
+
+## Error Handling
+
+The SDK provides detailed error information when API calls fail:
+
+```go
+job, err := client.Jobs.Define(context.TODO(), params)
+if err != nil {
+    var apierr *schedo.Error
+    if errors.As(err, &apierr) {
+        fmt.Printf("API error: %s\n", apierr.Error())
+        fmt.Printf("Status code: %d\n", apierr.StatusCode)
+        // You can also dump the full request/response for debugging
+        fmt.Println(string(apierr.DumpRequest(true)))
+        fmt.Println(string(apierr.DumpResponse(true)))
+    }
+    return
+}
+```
+
+## Job Properties
+
+When working with jobs, you have access to the following properties:
+
+```go
+type Job struct {
+    ID             int64                    // Unique job ID
+    Name           string                   // Job name
+    Command        string                   // Command to execute
+    CronExpression string                  // Cron schedule expression
+    Status         string                   // Current job status
+    Blocking       bool                     // Whether the job is blocking
+    MaxRetries     int64                   // Maximum retry attempts
+    RetryCount     int64                   // Current retry count
+    Timeout        string                   // Timeout duration
+    TimeoutSeconds int64                   // Timeout in seconds
+    Metadata       map[string]interface{}   // Custom metadata
+    LastRunAt      string                  // Last execution time
+    NextRunAt      string                  // Next scheduled run time
+    CreatedAt      string                  // Creation timestamp
+    UpdatedAt      string                  // Last update timestamp
+}
+```
+
+## Best Practices
+
+1. **Environment Variables**: While you can pass the API key directly to the client, it's recommended to use environment variables:
+   ```go
+   client := schedo.NewClient() // Will automatically use SCHEDO_API_KEY
+   ```
+
+2. **Context Usage**: Always pass a context to API calls for proper cancellation and timeout handling:
+   ```go
+   ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+   defer cancel()
+   job, err := client.Jobs.Define(ctx, params)
+   ```
+
+3. **Retries**: The SDK automatically handles retries for certain errors. You can configure retry behavior:
+   ```go
+   client := schedo.NewClient(
+       option.WithMaxRetries(3), // Default is 2
+   )
+   ```
+
+4. **Error Handling**: Always check for errors and handle them appropriately:
+   ```go
+   if err != nil {
+       log.Printf("Failed to create job: %v", err)
+       return
+   }
+   ```
+
+## Next Steps
+
+- Explore the [API Reference](/api-reference) for detailed information about all available endpoints
+- Check out the [Examples](/examples) for more code samples
+- Join our [Community](/community) for support and discussions 

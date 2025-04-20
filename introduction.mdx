@@ -1,71 +1,103 @@
 ---
-title: Introduction
-description: "Welcome to the home of your new documentation"
+title: 'Introduction'
+description: 'Welcome to Schedo.dev - Modern Cloud-Based Job Scheduling Platform'
 ---
 
-<img
-  className="block dark:hidden"
-  src="/images/hero-light.png"
-  alt="Hero Light"
-/>
-<img
-  className="hidden dark:block"
-  src="/images/hero-dark.png"
-  alt="Hero Dark"
-/>
 
-## Setting up
+Schedo.dev is a modern cloud-based job scheduling platform that solves the common challenges of traditional cron jobs. It provides a reliable, scalable, and developer-friendly way to schedule and manage recurring tasks without the operational overhead.
 
-The first step to world-class documentation is setting up your editing environments.
+## Why Schedo.dev?
+
+Traditional cron jobs come with several challenges that make them difficult to use in modern cloud environments:
 
 <CardGroup cols={2}>
-  <Card
-    title="Edit Your Docs"
-    icon="pen-to-square"
-    href="https://mintlify.com/docs/quickstart"
-  >
-    Get your docs set up locally for easy development
+  <Card title="DevOps Complexity" icon="gears">
+    Traditional crons require manual configuration through cron files, YAML, or system-level scripts
   </Card>
-  <Card
-    title="Preview Changes"
-    icon="image"
-    href="https://mintlify.com/docs/development"
-  >
-    Preview your changes before you push to make sure they're perfect
+  <Card title="No Built-in Reliability" icon="shield-xmark">
+    Lack of ack/nack mechanisms, retries, and error tracking requires custom implementation
+  </Card>
+  <Card title="Infrastructure Lock-in" icon="lock">
+    Cron logic tied to specific platforms (K8s, EC2) makes migration and scaling difficult
+  </Card>
+  <Card title="Scaling Issues" icon="chart-line">
+    Running on multiple instances requires complex orchestration to prevent duplicates and race conditions
   </Card>
 </CardGroup>
 
-## Make it yours
+## Key Features
 
-Update your docs to your brand and add valuable content for the best user conversion.
+<AccordionGroup>
+  <Accordion title="Developer-First Experience" icon="code">
+    No DevOps required - just write your job logic and let Schedo handle the rest:
+    ```typescript
+    schedo.defineJob(
+      'daily-cleanup',
+      '0 0 * * *',
+      async (ctx) => {
+        // Your job logic here
+        return { processed: true };
+      }
+    );
+    ```
+  </Accordion>
+  
+  <Accordion title="Built-in Reliability" icon="shield-check">
+    Everything you need for production workloads:
+    - Automatic retries with configurable backoff
+    - Acknowledgment/non-acknowledgment handling
+    - Comprehensive error tracking
+    - Duplicate run prevention
+  </Accordion>
+
+  <Accordion title="Platform Agnostic" icon="cloud">
+    Run your jobs anywhere:
+    - Works across any cloud provider
+    - No infrastructure lock-in
+    - Easy migration between environments
+    - Consistent behavior everywhere
+  </Accordion>
+
+  <Accordion title="Complete Observability" icon="chart-mixed">
+    Full visibility into your jobs:
+    - Real-time execution logs
+    - Performance metrics
+    - Status monitoring
+    - Failure alerts
+  </Accordion>
+</AccordionGroup>
+
+## Getting Started
+
+Install our SDK:
+
+```bash
+pnpm add @useschedo/node
+```
+
+Connect to Schedo.dev:
+
+```typescript
+import { SchedoSDK } from '@useschedo/node';
+
+const schedo = new SchedoSDK({
+  apiKey: process.env.SCHEDO_API_KEY
+});
+```
+
+## Next Steps
 
 <CardGroup cols={2}>
-  <Card
-    title="Customize Style"
-    icon="palette"
-    href="https://mintlify.com/docs/settings/global"
-  >
-    Customize your docs to your company's colors and brands
+  <Card title="Quickstart Guide" icon="bolt" href="/quickstart">
+    Create your first cloud-based scheduled job
   </Card>
-  <Card
-    title="Reference APIs"
-    icon="code"
-    href="https://mintlify.com/docs/api-playground/openapi"
-  >
-    Automatically generate endpoints from an OpenAPI spec
+  <Card title="Core Concepts" icon="book" href="/core-concepts/jobs">
+    Learn about jobs, scheduling, and reliability
   </Card>
-  <Card
-    title="Add Components"
-    icon="screwdriver-wrench"
-    href="https://mintlify.com/docs/content/components/accordions"
-  >
-    Build interactive features and designs to guide your users
+  <Card title="SDK Reference" icon="code" href="/sdk/installation">
+    Explore the SDK documentation
   </Card>
-  <Card
-    title="Get Inspiration"
-    icon="stars"
-    href="https://mintlify.com/customers"
-  >
-    Check out our showcase of our favorite documentation
+  <Card title="Examples" icon="code-branch" href="https://github.com/useschedo/examples">
+    See real-world usage examples
   </Card>
-</CardGroup>
+</CardGroup> 

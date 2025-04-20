@@ -1,0 +1,193 @@
+---
+title: 'Node.js Quickstart'
+description: 'Get started with Schedo.dev using Node.js'
+---
+
+This guide will help you set up your first cloud-based scheduled job using the Schedo Node.js SDK.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+- A Schedo.dev account and API key
+- Node.js 16.x or later installed
+- A task you want to schedule (e.g., data processing, cleanup, notifications)
+
+## Installation
+
+Install the Schedo.dev Node.js SDK using your preferred package manager:
+
+```bash
+# Using npm
+npm install @useschedo/node
+
+# Using pnpm
+pnpm add @useschedo/node
+
+# Using yarn
+yarn add @useschedo/node
+```
+
+## Create Your First Job
+
+Create a new file called `jobs.ts` (or `jobs.js` if you're not using TypeScript):
+
+```typescript
+import { SchedoSDK } from '@useschedo/node';
+
+// Initialize the SDK with your API key
+const schedo = new SchedoSDK({
+  apiKey: process.env.SCHEDO_API_KEY
+});
+
+// Define a job that runs every day at midnight
+await schedo.defineJob(
+  'daily-cleanup',
+  '0 0 * * *',
+  async (ctx) => {
+    const timestamp = new Date().toISOString();
+    await ctx.log('Starting daily cleanup');
+    
+    try {
+      // Your job logic here
+      const result = await performCleanup();
+      
+      await ctx.log('Cleanup completed', {
+        itemsCleaned: result.count
+      });
+      
+      return {
+        success: true,
+        itemsCleaned: result.count,
+        timestamp
+      };
+    } catch (error) {
+      // Schedo will automatically handle retries
+      await ctx.log('Cleanup failed', { error });
+      throw error;
+    }
+  },
+  {
+    // Automatic retry configuration
+    retries: 3,
+    retryDelay: 300000, // 5 minutes
+    
+    // Prevent multiple instances from running simultaneously
+    unique: true,
+    
+    // Job metadata
+    description: 'Daily data cleanup job',
+    tags: ['maintenance', 'cleanup']
+  }
+);
+
+// Start the job listener
+schedo.start();
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('Shutting down...');
+  schedo.stop();
+  process.exit(0);
+});
+```
+
+## Understanding the Code
+
+Let's break down the key components:
+
+1. **SDK Initialization**
+   ```typescript
+   const schedo = new SchedoSDK({
+     apiKey: process.env.SCHEDO_API_KEY
+   });
+   ```
+   Connects your Node.js application to Schedo.dev's cloud platform.
+
+2. **Job Definition**
+   ```typescript
+   schedo.defineJob(
+     'daily-cleanup',        // Unique job identifier
+     '0 0 * * *',           // Run at midnight
+     async (ctx) => {       // Job handler
+       // Job logic
+     },
+     {                      // Configuration
+       retries: 3,
+       unique: true
+     }
+   );
+   ```
+   Defines a job that Schedo.dev will execute according to the schedule.
+
+3. **Error Handling**
+   ```typescript
+   try {
+     await operation();
+   } catch (error) {
+     await ctx.log('Operation failed', { error });
+     throw error;  // Schedo handles retries automatically
+   }
+   ```
+   Schedo.dev provides built-in error handling and retries.
+
+## Running Your Job
+
+1. Set your API key as an environment variable:
+   ```bash
+   export SCHEDO_API_KEY=your_api_key_here
+   ```
+
+2. Run your job file:
+   ```bash
+   # Using TypeScript
+   pnpm tsx jobs.ts
+
+   # Using Node.js
+   node jobs.js
+   ```
+
+Your job is now running in the cloud! Schedo.dev will:
+- Execute it according to the schedule
+- Handle retries if it fails
+- Prevent duplicate runs
+- Provide logs and monitoring
+
+## TypeScript Support
+
+The Schedo Node.js SDK is written in TypeScript and provides full type safety:
+
+```typescript
+interface CleanupResult {
+  count: number;
+  duration: number;
+}
+
+schedo.defineJob<CleanupResult>(
+  'typed-job',
+  '0 0 * * *',
+  async (ctx) => {
+    const result = await performCleanup();
+    return {
+      count: result.count,
+      duration: result.duration
+    };
+  }
+);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Job Concepts" icon="book" href="/core-concepts/jobs">
+    Learn about job definitions and lifecycle
+  </Card>
+  <Card title="Node.js SDK Reference" icon="code" href="/sdk/installation">
+    Explore the Node.js SDK documentation
+  </Card>
+  <Card title="Error Handling" icon="shield" href="/core-concepts/error-handling">
+    Implement robust error handling
+  </Card>
+  <Card title="Examples" icon="code-branch" href="https://github.com/useschedo/examples">
+    See Node.js example projects
+  </Card>
+</CardGroup> 
