@@ -51,6 +51,12 @@
         "core-concepts/error-handling",
         "core-concepts/monitoring"
       ]
+    },
+    {
+      "group": "Cookbook",
+      "pages": [
+        "cookbook/schedo-hono"
+      ]
     }
   ],
   "footerSocials": {

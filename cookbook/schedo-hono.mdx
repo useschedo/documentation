@@ -1,0 +1,72 @@
+---
+title: 'Hono.JS Integration'
+description: 'Run scheduled jobs in Hono.JS'
+---
+
+Hono.JS is a fast, lightweight, built on Web Standards that support for any JavaScript runtime.
+It can be easily integrated with Schedo.dev to give you a way to run your cron jobs as they are the part of a project
+
+<Info>Currently, Schedo.dev can be integrated with Node.JS, Bun, Deno runtimes for Hono. We do not guarantee correct execution for serverless environments at the moment </Info>
+
+## Get started
+
+Let's start with simple Hono.JS application on Node.JS
+
+```typescript
+import { serve } from "@hono/node-server";
+import { Hono } from "hono";
+
+import {
+  SchedoSDK,
+  ExecutionInterval,
+  JobExecutionContext,
+  withApiKey,
+  withMetadata,
+  withTimeout,
+} from "@useschedo/node";
+
+const sdk = new SchedoSDK(
+  withApiKey("sS8FrOv3FzyLmCDNkIRpEfdUuPPg1juG"),
+);
+
+
+const app = new Hono();
+
+// Here is our internal route for job execution
+// We recommend using routes instead of random functions as your Hono context can
+app.get("/job-executor", (c) => {
+  return c.newResponse("Error happened inside job executor", 500);
+});
+
+sdk
+  .defineJob(
+    "example_hono_job",
+    ExecutionInterval.EveryMinute,
+    async (ctx: JobExecutionContext) => {
+      console.log("Executing job...", ctx.jobCode, ctx.executionId);
+      const result = await app.request("/job-executor", {
+        body: JSON.stringify(ctx),
+      });
+
+      // throwing an error will make this job as failed in Schedo dashboard
+      if (result.status >= 500) {
+        throw new Error("Error happened: " + (await result.text()));
+      }
+      return result.text();
+    },
+    withMetadata({ key: "value" }),
+    withTimeout(1000 * 60),
+  )
+  .then(() => sdk.start());
+
+serve(
+  {
+    fetch: app.fetch,
+    port: 3000,
+  },
+  async (info) => {
+    console.log(`Server is running on http://localhost:${info.port}`);
+  },
+);
+
+```
