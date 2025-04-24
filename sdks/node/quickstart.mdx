@@ -32,7 +32,7 @@ yarn add @useschedo/node
 Create a new file called `jobs.ts` (or `jobs.js` if you're not using TypeScript):
 
 ```typescript
-import { SchedoSDK } from '@useschedo/node';
+import { SchedoSDK, withTimeout, ExecutionInterval } from '@useschedo/node';
 
 // Initialize the SDK with your API key
 const schedo = new SchedoSDK({
@@ -40,45 +40,22 @@ const schedo = new SchedoSDK({
 });
 
 // Define a job that runs every day at midnight
-await schedo.defineJob(
-  'daily-cleanup',
-  '0 0 * * *',
-  async (ctx) => {
-    const timestamp = new Date().toISOString();
-    await ctx.log('Starting daily cleanup');
-    
-    try {
-      // Your job logic here
-      const result = await performCleanup();
-      
-      await ctx.log('Cleanup completed', {
-        itemsCleaned: result.count
-      });
-      
-      return {
-        success: true,
-        itemsCleaned: result.count,
-        timestamp
-      };
-    } catch (error) {
-      // Schedo will automatically handle retries
-      await ctx.log('Cleanup failed', { error });
-      throw error;
-    }
-  },
-  {
-    // Automatic retry configuration
-    retries: 3,
-    retryDelay: 300000, // 5 minutes
-    
-    // Prevent multiple instances from running simultaneously
-    unique: true,
-    
-    // Job metadata
-    description: 'Daily data cleanup job',
-    tags: ['maintenance', 'cleanup']
-  }
-);
+try {
+  await sdk.defineJob(
+    "error_handling_example",
+    ExecutionInterval.Daily,
+    async (ctx) => {
+      // This job might fail
+      if (Math.random() > 0.5) {
+        throw new Error("Random failure");
+      }
+      return { success: true };
+    },
+    withTimeout(5) // Set a 5-second timeout
+  );
+} catch (error) {
+  console.error("Failed to define job:", error);
+}
 
 // Start the job listener
 schedo.start();
@@ -97,9 +74,9 @@ Let's break down the key components:
 
 1. **SDK Initialization**
    ```typescript
-   const schedo = new SchedoSDK({
-     apiKey: process.env.SCHEDO_API_KEY
-   });
+   import { SchedoSDK, withApiKey } from "@useschedo/node";
+
+   const schedo = new SchedoSDK(withApiKey(process.env.SCHEDO_API_KEY));
    ```
    Connects your Node.js application to Schedo.dev's cloud platform.
 
@@ -110,12 +87,7 @@ Let's break down the key components:
      '0 0 * * *',           // Run at midnight
      async (ctx) => {       // Job handler
        // Job logic
-     },
-     {                      // Configuration
-       retries: 3,
-       unique: true
-     }
-   );
+     });
    ```
    Defines a job that Schedo.dev will execute according to the schedule.
 
@@ -124,11 +96,11 @@ Let's break down the key components:
    try {
      await operation();
    } catch (error) {
-     await ctx.log('Operation failed', { error });
+     await log('Operation failed', { error });
      throw error;  // Schedo handles retries automatically
    }
    ```
-   Schedo.dev provides built-in error handling and retries.
+   Schedo.dev provides built-in error handling;
 
 ## Running Your Job
 
@@ -148,7 +120,6 @@ Let's break down the key components:
 
 Your job is now running in the cloud! Schedo.dev will:
 - Execute it according to the schedule
-- Handle retries if it fails
 - Prevent duplicate runs
 - Provide logs and monitoring
 
@@ -157,12 +128,7 @@ Your job is now running in the cloud! Schedo.dev will:
 The Schedo Node.js SDK is written in TypeScript and provides full type safety:
 
 ```typescript
-interface CleanupResult {
-  count: number;
-  duration: number;
-}
-
-schedo.defineJob<CleanupResult>(
+schedo.defineJob(
   'typed-job',
   '0 0 * * *',
   async (ctx) => {

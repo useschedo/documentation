@@ -5,7 +5,7 @@ description: 'Learn about job scheduling patterns'
 
 # Scheduling
 
-Schedo.dev provides flexible scheduling options for running jobs, supporting both cron expressions and interval-based scheduling.
+Schedo.dev provides flexible scheduling options for running jobs, supporting cron expressions
 
 ## Cron Expressions
 
@@ -57,28 +57,6 @@ Cron expressions consist of five fields:
 '0 0 1 * *'
 ```
 
-## Interval-based Scheduling
-
-For simpler intervals, you can use interval-based scheduling:
-
-```typescript
-schedo.defineJob(
-  'health-check',
-  { minutes: 5 },    // Run every 5 minutes
-  async (ctx) => {
-    // Job implementation
-  }
-);
-
-schedo.defineJob(
-  'cleanup',
-  { hours: 1 },      // Run every hour
-  async (ctx) => {
-    // Job implementation
-  }
-);
-```
-
 ## Schedule Validation
 
 Schedo.dev validates both cron expressions and intervals:
@@ -92,27 +70,9 @@ schedo.defineJob(
     // Never runs - throws error during definition
   }
 );
-
-// Invalid interval
-schedo.defineJob(
-  'invalid-interval',
-  { minutes: 0 },   // 0 is invalid interval
-  async (ctx) => {
-    // Never runs - throws error during definition
-  }
-);
 ```
 
 ## Best Practices
-
-1. **Avoid Too Frequent Execution**
-   ```typescript
-   // Bad: Every second
-   '* * * * * *'
-   
-   // Better: Every minute
-   '* * * * *'
-   ```
 
 2. **Consider Business Hours**
    ```typescript

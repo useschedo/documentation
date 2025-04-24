@@ -4,7 +4,8 @@ description: 'Welcome to Schedo.dev - Modern Cloud-Based Job Scheduling Platform
 ---
 
 
-Schedo.dev is a modern cloud-based job scheduling platform that solves the common challenges of traditional cron jobs. It provides a reliable, scalable, and developer-friendly way to schedule and manage recurring tasks without the operational overhead.
+Schedo.dev is a modern cloud-based job scheduling platform that solves the common challenges of traditional cron jobs.
+It provides a reliable, scalable, and developer-friendly way to schedule and manage recurring tasks without the operational overhead.
 
 ## Why Schedo.dev?
 
@@ -12,16 +13,16 @@ Traditional cron jobs come with several challenges that make them difficult to u
 
 <CardGroup cols={2}>
   <Card title="DevOps Complexity" icon="gears">
-    Traditional crons require manual configuration through cron files, YAML, or system-level scripts
+    Traditional crons require manual configuration through crontab, YAML, or system-level scripts
   </Card>
   <Card title="No Built-in Reliability" icon="shield-xmark">
     Lack of ack/nack mechanisms, retries, and error tracking requires custom implementation
   </Card>
   <Card title="Infrastructure Lock-in" icon="lock">
-    Cron logic tied to specific platforms (K8s, EC2) makes migration and scaling difficult
+    Cron logic tied to specific platforms (K8s, EC2) makes migration and scaling difficult effectively locking you to a platform
   </Card>
   <Card title="Scaling Issues" icon="chart-line">
-    Running on multiple instances requires complex orchestration to prevent duplicates and race conditions
+    Preventing multiple instances from being executed at the same time requires complex orchestration to prevent duplicates and race conditions
   </Card>
 </CardGroup>
 
@@ -31,6 +32,16 @@ Traditional cron jobs come with several challenges that make them difficult to u
   <Accordion title="Developer-First Experience" icon="code">
     No DevOps required - just write your job logic and let Schedo handle the rest:
     ```typescript
+    import {
+      SchedoSDK,
+      ExecutionInterval,
+      withApiKey,
+    } from "@useschedo/node";
+
+    const sdk = new SchedoSDK(
+      withApiKey("YOUR_API_KEY"),
+    );
+
     schedo.defineJob(
       'daily-cleanup',
       '0 0 * * *',
@@ -39,6 +50,9 @@ Traditional cron jobs come with several challenges that make them difficult to u
         return { processed: true };
       }
     );
+
+    // start schedo instance
+    schedo.start();
     ```
   </Accordion>
   
@@ -78,11 +92,21 @@ pnpm add @useschedo/node
 Connect to Schedo.dev:
 
 ```typescript
-import { SchedoSDK } from '@useschedo/node';
+import { SchedoSDK, withApiKey, ExecutionInterval } from '@useschedo/node';
 
-const schedo = new SchedoSDK({
-  apiKey: process.env.SCHEDO_API_KEY
-});
+const schedo = new SchedoSDK(withApiKey(process.env.SCHEDO_API_KEY));
+
+schedo.defineJob('daily-cleanup',
+      ExecutionInterval.EveryMinute, // or cron expression
+      async (ctx) => {
+        // Your job logic here
+        return { processed: true };
+      }
+);
+
+
+schedo.start();
+
 ```
 
 ## Next Steps

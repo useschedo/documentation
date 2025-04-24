@@ -56,6 +56,8 @@ async (ctx) => {
 
 Jobs can return a string that will be stored as the execution result:
 
+<Info>In case your job returns a complex object, it will be serialised to JSON and stored as s string output</Info>
+
 ```typescript
 async (ctx) => {
   const result = await processData();
@@ -77,12 +79,8 @@ schedo.defineJob(
   'example-job',
   '0 * * * *',
   async (ctx) => {
-    try {
-      await processData();
-      return 'Job completed successfully';
-    } catch (error) {
-      throw error;
-    }
+    await processData();
+    return 'Job completed successfully';
   }
 );
 ```
@@ -98,40 +96,21 @@ schedo.defineJob(
   async (ctx) => {
     // Job implementation
   },
-  {
-    // Timeout configuration
-    timeout: 300000,   // 5 minutes
-
-    // Metadata
-    metadata: {
-      owner: 'team-name',
-      priority: 'high'
-    }
-  }
+  withTimeout(seconds), // optinal execution timeout, default to 5 seconds
+  withMetadata({ owner: "analytics-team", priority: "high" }), // optional metadata to be passed to the job
+  withBlocking(true), // prevents another job instance from execution in case there is an existing one running
 );
 ```
 
 ## Best Practices
 
+While using Schedo SDK, we wrap job handler and track errors under the hood. Whenever your job execution will fail, you will see
+an error in the dashboard.
+
 1. **Error Handling**
    ```typescript
    async (ctx) => {
-     try {
-       await riskyOperation();
-     } catch (error) {
-       throw error;
-     }
-   }
-   ```
-
-2. **Progress Tracking**
-   ```typescript
-   async (ctx) => {
-     const items = await getItems();
-     for (const item of items) {
-       await processItem(item);
-     }
-     return `Processed ${items.length} items`;
+     throw new Error('Failed to process users')
    }
    ```
 
