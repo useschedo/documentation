@@ -1,0 +1,842 @@
+openapi: 3.0.0
+info:
+  contact: {}
+  description: 'API Key obtained on https://app.schedo.dev'
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+  title: Schedo.dev API
+  version: '1.0'
+servers:
+  - url: 'https:/api.schedo.dev/api'
+paths:
+  /apikeys:
+    get:
+      parameters:
+        - description: '1'
+          in: header
+          name: X-API-ENVIRONMENT
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  items:
+                    $ref: '#/components/schemas/ent.ApiKey'
+                  type: array
+                type: array
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - apikeys
+      summary: Returns a list of API Keys for the organization
+    post:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.ApiKey'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - apikeys
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/web.CreateApiKeyReq'
+        description: Body
+        required: true
+      summary: Generates a new API Key to access Schedo.dev API
+  '/apikeys/revoke/{id}':
+    delete:
+      parameters:
+        - description: API Key ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  items:
+                    $ref: '#/components/schemas/ent.ApiKey'
+                  type: array
+                type: array
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - apikeys
+      summary: Revokes an API Key making it inactive
+  /jobs:
+    get:
+      parameters:
+        - description: '1'
+          in: header
+          name: X-API-ENVIRONMENT
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.Job'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      summary: List all jobs
+  /jobs/definition:
+    post:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.Job'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/web.DefineJobReq'
+        description: Body
+        required: true
+      summary: Tries to create a new Job Definition
+  /jobs/executions:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ent.JobExecution'
+                type: array
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      summary: Returns list of jobs that must be executed
+  '/jobs/executions/complete/{executionId}':
+    post:
+      parameters:
+        - description: '1'
+          in: path
+          name: executionId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.JobExecution'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/web.CompleteExecutionReq'
+        description: body
+        required: true
+      summary: Marks pending job execution as complete
+  /jobs/executions/sse:
+    get:
+      parameters:
+        - description: List of Job Codes to stream
+          in: query
+          name: jobs
+          schema:
+            items:
+              type: string
+            type: array
+          style: form
+      responses:
+        '101':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.JobExecution'
+          description: Switching Protocols
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      summary: Send job executions over Server Sent Events
+  '/jobs/executions/{jobId}':
+    get:
+      parameters:
+        - description: '1'
+          in: header
+          name: X-API-ENVIRONMENT
+          required: true
+          schema:
+            type: integer
+        - description: '1'
+          in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+        - description: '1'
+          in: query
+          name: cursor
+          schema:
+            type: integer
+        - description: '1'
+          in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/web.JobExecution'
+                type: array
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      summary: Returns a list of executions for a job
+  '/jobs/mute/{jobId}':
+    patch:
+      parameters:
+        - description: '1'
+          in: header
+          name: X-API-ENVIRONMENT
+          required: true
+          schema:
+            type: integer
+        - description: Job ID
+          in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.Job'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/web.UpdateJobMutedReq'
+        description: Body
+        required: true
+      summary: Update a job's muted status
+  '/jobs/pause/{jobId}':
+    patch:
+      parameters:
+        - description: '1'
+          in: header
+          name: X-API-ENVIRONMENT
+          required: true
+          schema:
+            type: integer
+        - description: Job ID
+          in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.JobExecution'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      summary: Temporary stops a job from running
+  '/jobs/resume/{jobId}':
+    patch:
+      parameters:
+        - description: '1'
+          in: header
+          name: X-API-ENVIRONMENT
+          required: true
+          schema:
+            type: integer
+        - description: Job ID
+          in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.JobExecution'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      summary: Resumes job execution
+  '/jobs/trigger/{jobId}':
+    post:
+      parameters:
+        - description: '1'
+          in: header
+          name: X-API-ENVIRONMENT
+          required: true
+          schema:
+            type: integer
+        - description: Job ID
+          in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.JobExecution'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      summary: Immediately triggers a job
+  '/jobs/{jobId}':
+    delete:
+      parameters:
+        - description: '1'
+          in: header
+          name: X-API-ENVIRONMENT
+          required: true
+          schema:
+            type: integer
+        - description: '1'
+          in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      description: >-
+        After you delete a job, you can't recover it, but if you have services
+        still running with that job reference, they will re-create and
+        re-schedule a new job automatically.
+      summary: Removes schedule for a job and removes its execution logs
+    get:
+      parameters:
+        - description: '1'
+          in: header
+          name: X-API-ENVIRONMENT
+          required: true
+          schema:
+            type: integer
+        - description: '1'
+          in: path
+          name: jobId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/web.JobOutput'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - jobs
+      summary: Retrieve a job by its ID
+  /org:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.Org'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - org
+      summary: Retrieves information about current org
+  /org/emails:
+    delete:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - org
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        description: Email to remove
+        required: true
+      summary: Removes an email from the organization
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - org
+      summary: Gets all emails for the organization
+    post:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - org
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        description: Email to add
+        required: true
+      summary: Adds an email to the organization
+  /org/environments:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ent.Environment'
+                type: array
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - environments
+      summary: Retrieves a list of environments for the current org
+    post:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.Environment'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - environments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/web.CreateOrgEnvReq'
+        description: Body
+        required: true
+      summary: Creates a new org environment
+  '/org/environments/{id}':
+    delete:
+      parameters:
+        - description: Environment ID
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ent.Environment'
+          description: OK
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - environments
+      summary: Deletes an org environment
+components:
+  schemas:
+    ent.ApiKey:
+      properties:
+        created_at:
+          description: CreatedAt holds the value of the "created_at" field.
+          type: string
+        edges:
+          allOf:
+            - $ref: '#/components/schemas/ent.ApiKeyEdges'
+          description: >-
+            Edges holds the relations/edges for other nodes in the graph.
+
+            The values are being populated by the ApiKeyQuery when eager-loading
+            is set.
+        environment_id:
+          description: EnvironmentID holds the value of the "environment_id" field.
+          type: integer
+        id:
+          description: ID of the ent.
+          type: integer
+        internal:
+          description: Internal holds the value of the "internal" field.
+          type: boolean
+        key:
+          description: Key holds the value of the "key" field.
+          type: string
+        name:
+          description: Name holds the value of the "name" field.
+          type: string
+        organization_id:
+          description: OrganizationID holds the value of the "organization_id" field.
+          type: integer
+        revoked:
+          description: Revoked holds the value of the "revoked" field.
+          type: boolean
+      type: object
+    ent.ApiKeyEdges:
+      type: object
+    ent.Environment:
+      properties:
+        created_at:
+          description: CreatedAt holds the value of the "created_at" field.
+          type: string
+        edges:
+          allOf:
+            - $ref: '#/components/schemas/ent.EnvironmentEdges'
+          description: >-
+            Edges holds the relations/edges for other nodes in the graph.
+
+            The values are being populated by the EnvironmentQuery when
+            eager-loading is set.
+        id:
+          description: ID of the ent.
+          type: integer
+        name:
+          description: Name holds the value of the "name" field.
+          type: string
+        organization_id:
+          description: OrganizationID holds the value of the "organization_id" field.
+          type: integer
+      type: object
+    ent.EnvironmentEdges:
+      properties:
+        organization:
+          description: Organization that owns this environment
+          items:
+            $ref: '#/components/schemas/ent.Org'
+          type: array
+      type: object
+    ent.Job:
+      properties:
+        blocking:
+          description: Blocking holds the value of the "blocking" field.
+          type: boolean
+        command:
+          description: Command to execute
+          type: string
+        created_at:
+          description: Time when the job was created
+          type: string
+        cron_expression:
+          description: Cron expression for job scheduling
+          type: string
+        environment_id:
+          description: ID of the user who owns this job
+          type: integer
+        id:
+          description: ID of the ent.
+          type: integer
+        key:
+          description: Key holds the value of the "key" field.
+          type: string
+        last_run_at:
+          description: Time when the job was last executed
+          type: string
+        max_retries:
+          description: Maximum number of retry attempts
+          type: integer
+        metadata:
+          additionalProperties: true
+          description: Additional metadata for the job
+          type: object
+        muted:
+          description: Whether notifications for this job are muted
+          type: boolean
+        name:
+          description: Name of the job
+          type: string
+        next_run_at:
+          description: Scheduled time for next execution
+          type: string
+        paused:
+          description: Paused holds the value of the "paused" field.
+          type: boolean
+        retry_count:
+          description: Number of retry attempts
+          type: integer
+        status:
+          description: 'Current job status (pending, running, completed, failed)'
+          type: string
+        timeout:
+          description: Maximum execution time before job is terminated
+          type: string
+        timeout_seconds:
+          description: Maximum execution time before job is terminated
+          type: integer
+        updated_at:
+          description: Time when the job was last updated
+          type: string
+      type: object
+    ent.JobExecution:
+      properties:
+        duration:
+          description: Duration holds the value of the "duration" field.
+          type: integer
+        end_time:
+          description: Time when execution completed
+          type: string
+        error:
+          description: Error message if execution failed
+          type: string
+        exit_code:
+          description: Exit code of the executed command
+          type: integer
+        id:
+          description: ID of the ent.
+          type: integer
+        job_code:
+          description: JobCode holds the value of the "job_code" field.
+          type: string
+        output:
+          description: Output of the executed command
+          type: string
+        pick_up_time:
+          description: Time when execution was picked up by a worker
+          type: string
+        start_time:
+          description: Time when execution started
+          type: string
+        status:
+          description: 'Execution status (running, completed, failed, skipped, expired)'
+          type: string
+      type: object
+    ent.Org:
+      properties:
+        clerk_id:
+          description: External Clerk organization ID
+          type: string
+        edges:
+          allOf:
+            - $ref: '#/components/schemas/ent.OrgEdges'
+          description: >-
+            Edges holds the relations/edges for other nodes in the graph.
+
+            The values are being populated by the OrgQuery when eager-loading is
+            set.
+        emails:
+          description: List of organization emails
+          items:
+            type: string
+          type: array
+        id:
+          description: ID of the ent.
+          type: integer
+        name:
+          description: Organization name
+          type: string
+        single_user_org:
+          description: SingleUserOrg holds the value of the "single_user_org" field.
+          type: boolean
+      type: object
+    ent.OrgEdges:
+      properties:
+        api_keys:
+          description: APIKeys holds the value of the api_keys edge.
+          items:
+            $ref: '#/components/schemas/ent.ApiKey'
+          type: array
+      type: object
+    web.CompleteExecutionReq:
+      properties:
+        complete_server_time_utc:
+          type: integer
+        error:
+          example: Error message
+          type: string
+        output:
+          example: Output message
+          type: string
+        start_server_time_utc:
+          type: integer
+        success:
+          example: true
+          type: boolean
+      required:
+        - success
+      type: object
+    web.CreateApiKeyReq:
+      properties:
+        environment_id:
+          example: 1
+          type: integer
+        name:
+          example: First ApiKey
+          minLength: 4
+          type: string
+      required:
+        - environment_id
+        - name
+      type: object
+    web.CreateOrgEnvReq:
+      properties:
+        name:
+          example: Name of your environment
+          minLength: 4
+          type: string
+      required:
+        - name
+      type: object
+    web.DefineJobReq:
+      properties:
+        blocking:
+          type: boolean
+        metadata:
+          additionalProperties: {}
+          type: object
+        name:
+          example: Name of your job
+          minLength: 4
+          type: string
+        schedule:
+          example: 0 0 * * *
+          type: string
+        timeout_seconds:
+          type: integer
+      required:
+        - name
+        - schedule
+      type: object
+    web.JobExecution:
+      properties:
+        duration:
+          description: Duration holds the value of the "duration" field.
+          type: integer
+        end_time:
+          description: Time when execution completed
+          type: string
+        error:
+          description: Error message if execution failed
+          type: string
+        exit_code:
+          description: Exit code of the executed command
+          type: integer
+        id:
+          description: ID of the ent.
+          type: integer
+        job_code:
+          description: JobCode holds the value of the "job_code" field.
+          type: string
+        metadata:
+          additionalProperties: {}
+          type: object
+        output:
+          description: Output of the executed command
+          type: string
+        pick_up_time:
+          description: Time when execution was picked up by a worker
+          type: string
+        start_time:
+          description: Time when execution started
+          type: string
+        status:
+          description: 'Execution status (running, completed, failed, skipped, expired)'
+          type: string
+      type: object
+    web.JobOutput:
+      properties:
+        job:
+          $ref: '#/components/schemas/ent.Job'
+        last_run:
+          $ref: '#/components/schemas/ent.JobExecution'
+      type: object
+    web.UpdateJobMutedReq:
+      properties:
+        muted:
+          type: boolean
+      type: object
+

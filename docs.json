@@ -1,0 +1,75 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Schedo.dev",
+  "colors": {
+    "primary": "#EF4444",
+    "light": "#F87171",
+    "dark": "#DC2626"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "documentation/introduction"
+            ]
+          },
+          {
+            "group": "SDKs",
+            "pages": [
+              "documentation/sdks/node/quickstart",
+              "documentation/sdks/go/quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "documentation/core-concepts/jobs",
+              "documentation/core-concepts/scheduling",
+              "documentation/core-concepts/error-handling",
+              "documentation/core-concepts/monitoring"
+            ]
+          },
+          {
+            "group": "Cookbook",
+            "pages": [
+              "documentation/cookbook/schedo-hono"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference (WIP)",
+        "openapi": "./api-reference/openapi.yaml"
+      }
+    ]
+  },
+  "logo": {
+    "light": "light.svg",
+    "dark": "dark.svg",
+    "href": "https://schedo.dev"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/useschedo/sdk"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://app.schedo.dev"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/useschedo"
+    }
+  }
+}
