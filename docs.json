@@ -32,7 +32,8 @@
               "documentation/core-concepts/jobs",
               "documentation/core-concepts/scheduling",
               "documentation/core-concepts/error-handling",
-              "documentation/core-concepts/monitoring"
+              "documentation/core-concepts/monitoring",
+              "documentation/core-concepts/notifications"
             ]
           },
           {

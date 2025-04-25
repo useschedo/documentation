@@ -1,0 +1,51 @@
+---
+title: 'Notifications'
+description: 'Learn about notification settings and behavior'
+---
+
+Notifications in Schedo.dev help you stay informed about job failures and system events. The system is designed to keep you updated while avoiding notification fatigue.
+
+
+Schedo.dev follows a smart notification policy:
+
+- Notifications are sent only for the first failure of a job
+- Subsequent failures of the same job won't trigger additional notifications
+- This prevents notification spam while ensuring you're aware of issues
+
+```typescript
+// Example job that might trigger a notification
+schedo.defineJob(
+  'daily-report',
+  '0 0 * * *',
+  async (ctx) => {
+    // If this fails, you'll get a notification
+    // Subsequent failures won't trigger more notifications
+    await generateReport();
+  }
+);
+```
+
+## Notification Management
+
+### Muting Jobs
+
+You can mute notifications for specific jobs:
+
+1. Navigate to the job details page
+2. Click the "Mute" button
+
+<img src="/images/notifications/mute-button.jpg" alt="Mute button in job details" />
+
+The job will no longer send notifications for failures
+
+### Email Configuration
+
+Notification emails are sent to a configurable list of recipients:
+
+1. Go to the Settings tab
+2. Add or remove recepients
+
+<img src="/images/notifications/add-email.jpg" alt="Mute button in job details" />
+
+<Info>Important: The email list is shared across all environments in your account. Changes to the list will affect all environments.</Info>
+
