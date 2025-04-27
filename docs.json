@@ -7,6 +7,14 @@
     "light": "#F87171",
     "dark": "#DC2626"
   },
+  "integrations": {
+    "koala": {
+      "publicApiKey": "pk_91cf98811d0e3ec0cb30a52ad4c5cc8d3f19"
+    },
+    "mixpanel": {
+      "projectToken": "f461abdcf57983513895648845ed13c7"
+    }
+  },
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
@@ -15,9 +23,7 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": [
-              "documentation/introduction"
-            ]
+            "pages": ["documentation/introduction"]
           },
           {
             "group": "SDKs",
@@ -38,9 +44,7 @@
           },
           {
             "group": "Cookbook",
-            "pages": [
-              "documentation/cookbook/schedo-hono"
-            ]
+            "pages": ["documentation/cookbook/schedo-hono"]
           }
         ]
       },
