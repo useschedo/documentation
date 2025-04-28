@@ -44,7 +44,7 @@ const schedo = new SchedoSDK(withApiKey("YOUR_API_KEY"));
 
 // Define a job that runs every day at midnight
 try {
-  await sdk.defineJob(
+  await schedo.defineJob(
     "error_handling_example",
     ExecutionInterval.Daily,
     async (ctx) => {
