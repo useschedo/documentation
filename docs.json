@@ -16,7 +16,8 @@
           {
             "group": "Getting Started",
             "pages": [
-              "documentation/introduction"
+              "documentation/introduction",
+              "documentation/pricing"
             ]
           },
           {
@@ -43,10 +44,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "API Reference (WIP)",
-        "openapi": "./api-reference/openapi.yaml"
       }
     ]
   },
