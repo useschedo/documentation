@@ -32,16 +32,19 @@ yarn add @useschedo/node
 Create a new file called `jobs.ts` (or `jobs.js` if you're not using TypeScript):
 
 ```typescript
-import { SchedoSDK, withTimeout, ExecutionInterval } from '@useschedo/node';
+import {
+  SchedoSDK,
+  ExecutionInterval,
+  withApiKey,
+  withBaseURL,
+} from "@useschedo/node";
 
 // Initialize the SDK with your API key
-const schedo = new SchedoSDK({
-  apiKey: process.env.SCHEDO_API_KEY
-});
+const schedo = new SchedoSDK(withApiKey("YOUR_API_KEY"));
 
 // Define a job that runs every day at midnight
 try {
-  await sdk.defineJob(
+  await schedo.defineJob(
     "error_handling_example",
     ExecutionInterval.Daily,
     async (ctx) => {
@@ -150,4 +153,4 @@ schedo.defineJob(
   <Card title="Error Handling" icon="shield" href="/core-concepts/error-handling">
     Implement robust error handling
   </Card>
-</CardGroup> 
+</CardGroup>
